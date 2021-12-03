@@ -1,31 +1,52 @@
 version: '3'
-
 services:
-  app:
+  database:
+    container_name: database
     build:
-      context: node
-    container_name: app
-    entrypoint: dockerize -wait tcp://db:3306 -timeout 20s docker-entrypoint.sh
-    networks: 
+      context: .
+      dockerfile: ./config/mysql/Dockerfile
+    volumes:
+      - ./config/mysql/data:/var/lib/mysql
+    env_file:
+    - .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3306"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
       - nginx-node-network
-    volumes: 
-      - ./node:/usr/src/app
-    ports: 
-      - "3000:3000"
-    depends_on:
-      - db
     restart: always
 
-  db:
-    image: mysql:5.7
-    command: --innodb-use-native-aio=0
-    container_name: db
-    volumes: 
-      - ./mysql:/var/lib/mysql
-    environment: 
-      - MYSQL_DATABASE=nodedb
-      - MYSQL_ROOT_PASSWORD=root
-    networks: 
+  api:
+    container_name: api
+    build:
+      context: .
+      dockerfile: ./config/node.js/Dockerfile
+    env_file:
+    - .env
+    depends_on:
+      database:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - nginx-node-network
+    restart: always
+
+  reverse_proxy:
+    container_name: reverse_proxy
+    build:
+      context: ./config/nginx
+    ports:
+      - 8080:8080
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
       - nginx-node-network
     restart: always
 

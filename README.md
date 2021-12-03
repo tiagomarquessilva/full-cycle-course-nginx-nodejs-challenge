@@ -43,27 +43,8 @@ This is my resolution to a practice challenge of the [Full Cycle course by code.
     </tr>
 </table>
 
-## Installation
+## Usage
 
-### Using Docker Hub
-
-1. You can check the image in [Docker Hub](https://hub.docker.com/r/tiagomarquessilva/codeeducation). After a while Docker Hub removes unused images, so it may not be currently available
 1. ```docker
-   docker run --rm tiagomarquessilva/codeeducation
-   ```
-1. To check the image size:
-   ```docker
-   docker image ls tiagomarquessilva/codeeducation
-   ```
-
-### Building From Source
-1. ```docker
-   docker build -t tiagomarquessilva/codeeducation .
-   ```
-1. ```docker
-   docker run --rm tiagomarquessilva/codeeducation
-   ```
-1. To check the image size:
-   ```docker
-   docker image ls tiagomarquessilva/codeeducation
+   docker compose up -d --build --force-recreate
    ```
