@@ -1,19 +1,18 @@
 version: '3'
+
+networks:
+  nginx-node-network:
+    driver: bridge
+
 services:
   database:
     container_name: database
-    build:
-      context: .
-      dockerfile: ./config/mysql/Dockerfile
+    image: mysql:8
+    command: --innodb-use-native-aio=0
     volumes:
       - ./config/mysql/data:/var/lib/mysql
     env_file:
-    - .env
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3306"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+      - .env
     networks:
       - nginx-node-network
     restart: always
@@ -23,16 +22,12 @@ services:
     build:
       context: .
       dockerfile: ./config/node.js/Dockerfile
+    entrypoint: dockerize -wait tcp://database:3306 -timeout 30s docker-entrypoint.sh
+    command: npm start
     env_file:
-    - .env
+      - .env
     depends_on:
-      database:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+      - database
     networks:
       - nginx-node-network
     restart: always
@@ -44,12 +39,7 @@ services:
     ports:
       - 8080:8080
     depends_on:
-      api:
-        condition: service_healthy
+      - api
     networks:
       - nginx-node-network
     restart: always
-
-networks:
-  nginx-node-network:
-    driver: bridge
